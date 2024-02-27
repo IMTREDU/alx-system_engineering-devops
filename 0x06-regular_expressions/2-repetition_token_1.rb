@@ -1,10 +1,9 @@
 #!/usr/bin/env ruby
 
-regex = /hbt+n/
 input = ARGV[0]
 
 if input
-  puts input.scan(regex).join
+  puts input.scan(/hb?t?n/).join
 else
   puts "No input provided."
 end
