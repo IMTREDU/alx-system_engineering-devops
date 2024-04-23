@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# This script sets up a new Ubuntu machine by installing and configuring Nginx to listen on port 80.
+# It serves a webpage displaying a "Hello World" message.
+
+echo -e "Updating and installing Nginx.\n"
+sudo apt-get update -y -qq && \
+	 sudo apt-get install nginx -y
+
+echo -e "\nSetting up some minor configurations.\n"
+
+# Start Nginx service
+sudo service nginx start
+
+# Allow Nginx through the firewall
+sudo ufw allow 'Nginx HTTP'
+
+# Grant user ownership of website files for easy editing
+sudo chown -R "$USER":"$USER" /var/www/html
+sudo chmod -R 755 /var/www
+
+# Backup default index page
+cp /var/www/html/index.nginx-debian.html /var/www/html/index.nginx-debian.html.bckp
+
+# Create a new index page with "Hello World!" message
+echo -e "Hello World!" > /var/www/html/index.nginx-debian.html
+
+# Configure redirection to a YouTube video for /redirect_me
+sudo sed -i '24i\	rewrite ^/redirect_me https://www.youtube.com/@PawfulMemes/shorts' /etc/nginx/sites-available/default
+
+# Set up a custom 404 error page
+echo "This is not a page" >> /var/www/html/error_404.html
+sudo sed -i '25i\	error_page 404 /error_404.html;' /etc/nginx/sites-available/default
+
+# Restart Nginx service
+sudo service nginx restart
