@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Installs HAProxy with the subsequent settings:
+# Allows management via the init script
+# Distributes requests using a round-robin algorithm
+
+if ! command -v haproxy &> /dev/null
+then
+    echo "Installing HAProxy..."
+    sudo apt-get update
+    sudo apt-get install -y haproxy
+else
+    echo "HAProxy is already installed."
+fi
+
+web_01_ip="54.90.45.16"
+web_02_ip="100.26.222.243"
+web_01_hostname="530918-web-01"
+web_02_hostname="530918-web-02"
+
+echo "ENABLED=1" | sudo tee -a /etc/default/haproxy
+
+sudo tee /etc/haproxy/haproxy.cfg > /dev/null <<EOT
+frontend Randommall.tech
+    timeout client  30000
+    bind 0:80
+    default_backend Randommall.tech_backend
+
+backend Randommall.tech_backend
+    timeout connect  3000
+    timeout server  30000
+    balance roundrobin
+    server $web_01_hostname $web_01_ip:80 check
+    server $web_02_hostname $web_02_ip:80 check
+EOT
+
+sudo service haproxy restart
+
+echo "HAProxy configuration completed."
