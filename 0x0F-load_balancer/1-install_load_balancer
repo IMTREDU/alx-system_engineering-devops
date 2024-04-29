@@ -29,6 +29,9 @@ backend Randommall.tech_backend
     timeout connect  3000
     timeout server  30000
     balance roundrobin
+    option http-server-close          # Close HTTP connection after server response
+    option forwardfor                # Add X-Forwarded-For header
+    http-request add-header X-Served-By %[dst_addr]   # Add X-Served-By header with server address
     server $web_01_hostname $web_01_ip:80 check
     server $web_02_hostname $web_02_ip:80 check
 EOT
