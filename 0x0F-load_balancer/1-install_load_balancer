@@ -1,41 +1,54 @@
 #!/usr/bin/env bash
-# Installs HAProxy with the subsequent settings:
-# Allows management via the init script
-# Distributes requests using a round-robin algorithm
+# install load balancer
 
-if ! command -v haproxy &> /dev/null
-then
-    echo "Installing HAProxy..."
-    sudo apt-get update
-    sudo apt-get install -y haproxy
-else
-    echo "HAProxy is already installed."
-fi
+echo -e "Updating and performing some basic checks...\n"
 
-web_01_ip="54.90.45.16"
-web_02_ip="100.26.222.243"
-web_01_hostname="530918-web-01"
-web_02_hostname="530918-web-02"
+function install() {
+    command -v "$1" &> /dev/null
 
-echo "ENABLED=1" | sudo tee -a /etc/default/haproxy
+    if [ $? -ne 0 ]; then
+        echo -e "    Installing: $1\n"
+        sudo apt-get update -y -qq && \
+            sudo apt-get install -y "$1" -qq
+        echo -e "\n"
+    else
+        echo -e "    ${1} is already installed.\n"
+    fi
+}
 
-sudo tee /etc/haproxy/haproxy.cfg > /dev/null <<EOT
-frontend Randommall.tech
-    timeout client  30000
-    bind 0:80
-    default_backend Randommall.tech_backend
+install haproxy
 
-backend Randommall.tech_backend
-    timeout connect  3000
-    timeout server  30000
+echo -e "\nSetting up some basic configurations.\n"
+
+sudo cp /etc/haproxy/haproxy.cfg haproxy_default.backup
+
+server_config=\
+"
+defaults
+  mode http
+  timeout client 15s
+  timeout connect 10s
+  timeout server 15s
+  timeout http-request 10s
+
+frontend clickviral-tech-frontend
+    bind *:80
+    default_backend clickviral-tech-backend
+
+backend clickviral-tech-backend
     balance roundrobin
-    option http-server-close          # Close HTTP connection after server response
-    option forwardfor                # Add X-Forwarded-For header
-    http-request add-header X-Served-By %[dst_addr]   # Add X-Served-By header with server address
-    server $web_01_hostname $web_01_ip:80 check
-    server $web_02_hostname $web_02_ip:80 check
-EOT
+    server 530918-web-01 54.90.45.16:80 check
+    server 530918-web-02 100.26.222.243:80 check
+"
 
-sudo service haproxy restart
+echo "$server_config" | sudo dd status=none of=/etc/haproxy/haproxy.cfg
 
-echo "HAProxy configuration completed."
+echo "ENABLED=1" | sudo dd status=none of=/etc/default/haproxy
+
+echo "Configuration set - Roundrobin On 530918-web-01 & 530918-web-02"
+
+if [ "$(pgrep -c haproxy)" -le 0 ]; then
+    sudo service haproxy start
+else
+    sudo service haproxy restart
+fi
