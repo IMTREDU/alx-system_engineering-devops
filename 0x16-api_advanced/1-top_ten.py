@@ -1,14 +1,13 @@
 #!/usr/bin/python3
 """
-Script to display the hottest posts from a specified Reddit subreddit
+Script to print hot posts on a given Reddit subreddit.
 """
 
 import requests
 
+
 def top_ten(subreddit):
-    """
-    Display the titles of the 10 most popular posts from a given subreddit
-    """
+    """Print the titles of the 10 hottest posts on a given subreddit."""
     url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
 
     headers = {
