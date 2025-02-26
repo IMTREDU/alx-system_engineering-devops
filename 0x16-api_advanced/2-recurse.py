@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Script to query a list of all hot posts on a given Reddit subreddit.
+Script to retrieve all hot posts from a specified Reddit subreddit recursively
 """
 
 import requests

@@ -5,7 +5,6 @@ Module to query the Reddit API & return the num of subs
 
 import requests
 
-
 def number_of_subscribers(subreddit):
     """Queries the Reddit API & Ret the total num of subs of given subreddit"""
     url = "https://www.reddit.com/r/{}/about.json".format(subreddit)
